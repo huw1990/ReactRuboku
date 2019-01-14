@@ -3,11 +3,45 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 class Numbers extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedNumbers: Array(10).fill(false),
+      selectedNumber: -1,
+    }
+  }
+
+  handleClick(i) {
+    const value = i - 1;
+    const selectedNumbers = this.state.selectedNumbers.slice();
+    const selectedNum = this.state.selectedNumber;
+    if (selectedNum != -1) {
+      selectedNumbers[selectedNum - 1] = false;
+    }
+    selectedNumbers[value] = true;
+    this.setState({
+      selectedNumbers: selectedNumbers,
+      selectedNumber: i,
+    });
+  }
+
+  getDivId(i) {
+    const arrayValue = i - 1;
+    const isSelected = this.state.selectedNumbers[arrayValue];
+    console.log("i=" + arrayValue + " isSelected=" + isSelected);
+    if (isSelected) {
+      return "clicked";
+    } else {
+      return "clickable";
+    }
+  }
 
   renderNumber(i) {
     return (
       <Number
         value={i}
+        divid={this.getDivId(i)}
+        onClick={() => this.handleClick(i)}
       />
     );
   }
@@ -34,7 +68,8 @@ function Number(props) {
   return (
     <div
       className="number-button-item"
-      id="clickable">
+      id={props.divid}
+      onClick={props.onClick}>
       {props.value}
     </div>
   );
@@ -73,7 +108,6 @@ function Operation(props) {
 
 class Grid extends React.Component {
 
-  //TODO: have proper state, separate class for each item in the grid
   render() {
     return (
       <div className="game-grid">
@@ -99,7 +133,6 @@ class Grid extends React.Component {
 }
 
 class Game extends React.Component {
-
   render() {
     return (
       <div className="container">
