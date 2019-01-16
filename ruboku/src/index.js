@@ -2,6 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
+//An enum for the part of the grid changer, i.e. either numbers or operations
+var GridChangePart = Object.freeze({"NUMBER":1, "OPERATION":2});
+
+//An enum for the various operation types
+var OpType = Object.freeze({"NONE":-1, "ADD":1, "SUBTRACT":2, "MULTIPLY":3, "DIVIDE":4});
+
 function Numbers(props) {
   return (
     <div className="number-buttons">
@@ -23,7 +29,7 @@ function renderNumber(i, props) {
   return (
     <Number
       value={i}
-      divid={props.getDivId(i)}
+      divid={props.getDivId(i, GridChangePart.NUMBER)}
       onClick={() => {props.handleClick(i);}}
     />
   );
@@ -40,39 +46,39 @@ function Number(props) {
   );
 }
 
-class Operations extends React.Component {
-  renderOperation(val) {
+function Operations(props) {
+  return (
+    <div className="op-buttons">
+      {renderOperation("+", OpType.ADD, props)}
+      {renderOperation("-", OpType.SUBTRACT, props)}
+      {renderOperation("x", OpType.MULTIPLY, props)}
+      {renderOperation("/", OpType.DIVIDE, props)}
+    </div>
+  );
+}
+
+function renderOperation(val, opType, props) {
     return (
       <Operation
         value={val}
+        divid={props.getDivId(opType, GridChangePart.OPERATION)}
+        onClick={() => {props.handleClick(opType);}}
       />
     );
   }
-
-  render() {
-    return (
-      <div className="op-buttons">
-        {this.renderOperation("+")}
-        {this.renderOperation("-")}
-        {this.renderOperation("x")}
-        {this.renderOperation("/")}
-      </div>
-    );
-  }
-}
 
 function Operation(props) {
   return (
     <div
       className="op-button-item"
-      id="clickable">
+      id={props.divid}
+      onClick={props.onClick}>
       {props.value}
     </div>
   );
 }
 
 class Grid extends React.Component {
-
   render() {
     return (
       <div className="game-grid">
@@ -103,10 +109,12 @@ class Game extends React.Component {
     this.state = {
       selectedNumbers: Array(10).fill(false),
       selectedNumber: -1,
+      selectedOps: Array(4).fill(false),
+      selectedOp: OpType.NONE,
     }
   }
 
-  handleClick(i) {
+  handleNumberClick(i) {
     console.log("i=" + i);
     const value = i - 1;
     const selectedNumbers = this.state.selectedNumbers.slice();
@@ -122,10 +130,26 @@ class Game extends React.Component {
     });
   }
 
-  getDivId(i) {
-    console.log("getDivId");
+  handleOperationClick(i) {
+    console.log("i=" + i);
+    const value = i - 1;
+    const selectedOps = this.state.selectedOps.slice();
+    const selectedOp = this.state.selectedOp;
+    if (selectedOp !== OpType.NONE) {
+      selectedOps[selectedOp - 1] = false;
+    }
+    selectedOps[value] = true;
+    console.log("Setting state");
+    this.setState({
+      selectedOps: selectedOps,
+      selectedOp: i,
+    });
+  }
+
+  getDivId(i, numberOrOp) {
+    console.log("getDivId, numberOrOp=" + numberOrOp);
     const arrayValue = i - 1;
-    const isSelected = this.state.selectedNumbers[arrayValue];
+    const isSelected = (numberOrOp === GridChangePart.NUMBER) ? this.state.selectedNumbers[arrayValue] : this.state.selectedOps[arrayValue];
     console.log("i=" + arrayValue + " isSelected=" + isSelected);
     if (isSelected) {
       return "clicked";
@@ -141,8 +165,8 @@ class Game extends React.Component {
         <p>Moves: 0</p>
         <div className="undo-button">Undo Last Move</div>
         <Grid/>
-        <Numbers handleClick={(i) => this.handleClick(i)} getDivId={(i) => this.getDivId(i)}/>
-        <Operations/>
+        <Numbers handleClick={(i) => this.handleNumberClick(i)} getDivId={(i, numberOrOp) => this.getDivId(i, numberOrOp)}/>
+        <Operations handleClick={(i) => this.handleOperationClick(i)} getDivId={(i, numberOrOp) => this.getDivId(i, numberOrOp)}/>
       </div>
     );
   }
