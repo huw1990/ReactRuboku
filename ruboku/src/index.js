@@ -8,6 +8,14 @@ var GridChangePart = Object.freeze({"NUMBER":1, "OPERATION":2});
 //An enum for the various operation types
 var OpType = Object.freeze({"NONE":-1, "ADD":1, "SUBTRACT":2, "MULTIPLY":3, "DIVIDE":4});
 
+//An enum for telling whether we're dealing with a row or a column
+var RowOrCol = Object.freeze({"ROW": 1, "COLUMN": 2});
+
+//The array index values for each row and column. I.e. we have a 9 value array representing a 3x3 grid, row 1 is
+//index 0, 1 and 2, column 1 is index 0, 3, 6, and so on.
+var RowIndexes = Object.freeze({1: [0, 1, 2], 2: [3, 4, 5], 3: [6, 7, 8]})
+var ColIndexes = Object.freeze({1: [0, 3, 6], 2: [1, 4, 7], 3: [2, 5, 8]})
+
 function Numbers(props) {
   return (
     <div className="number-buttons">
@@ -79,25 +87,44 @@ function Operation(props) {
 }
 
 class Grid extends React.Component {
+
+  renderButton(rowOrCol, number, props) {
+    const buttonValue = (rowOrCol === RowOrCol.COLUMN) ? "v" : ">";
+    return (
+      <div
+        id="gameclickable"
+        onClick={() => {props.handleClick(rowOrCol, number);}}>
+        {buttonValue}
+      </div>
+    );
+  }
+
+  renderGridSquare(props, i) {
+    return (
+      <div>
+        {props.gridValues[i]}
+      </div>
+    );
+  }
   render() {
     return (
       <div className="game-grid">
-        <div className="game-item" id="emptygrid"> </div>
-        <div className="game-item" id="gameclickable">v</div>
-        <div className="game-item" id="gameclickable">v</div>
-        <div className="game-item" id="gameclickable">v</div>
-        <div className="game-item" id="gameclickable">></div>
-        <div className="game-item">1</div>
-        <div className="game-item">1</div>
-        <div className="game-item">1</div>
-        <div className="game-item" id="gameclickable">></div>
-        <div className="game-item">1</div>
-        <div className="game-item">1</div>
-        <div className="game-item">1</div>
-        <div className="game-item" id="gameclickable">></div>
-        <div className="game-item">1</div>
-        <div className="game-item">1</div>
-        <div className="game-item">1</div>
+        <div id="emptygrid"> </div>
+        {this.renderButton(RowOrCol.COLUMN, 1, this.props)}
+        {this.renderButton(RowOrCol.COLUMN, 2, this.props)}
+        {this.renderButton(RowOrCol.COLUMN, 3, this.props)}
+        {this.renderButton(RowOrCol.ROW, 1, this.props)}
+        {this.renderGridSquare(this.props, 0)}
+        {this.renderGridSquare(this.props, 1)}
+        {this.renderGridSquare(this.props, 2)}
+        {this.renderButton(RowOrCol.ROW, 2, this.props)}
+        {this.renderGridSquare(this.props, 3)}
+        {this.renderGridSquare(this.props, 4)}
+        {this.renderGridSquare(this.props, 5)}
+        {this.renderButton(RowOrCol.ROW, 3, this.props)}
+        {this.renderGridSquare(this.props, 6)}
+        {this.renderGridSquare(this.props, 7)}
+        {this.renderGridSquare(this.props, 8)}
     </div>
     );
   }
@@ -107,10 +134,12 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      gridValues: [1, 1, 6, 5, 5, 30, 9, 9, 14],
       selectedNumbers: Array(10).fill(false),
       selectedNumber: -1,
       selectedOps: Array(4).fill(false),
       selectedOp: OpType.NONE,
+      moves: 0
     }
   }
 
@@ -158,13 +187,59 @@ class Game extends React.Component {
     }
   }
 
+  handleGridButtonClick(rowOrCol, number) {
+    console.log("rowOrCol=" + rowOrCol + ", number=" + number);
+    const selectedNumber = this.state.selectedNumber;
+    if (selectedNumber === -1) {
+      console.log("No number selected");
+      return;
+    }
+    const selectedOp = this.state.selectedOp;
+    const gridValues = this.state.gridValues.slice();
+    let indexesToChange = (rowOrCol === RowOrCol.ROW) ? RowIndexes[number] : ColIndexes[number];
+    this.applyGridChangeToGrid(gridValues, selectedNumber, selectedOp, indexesToChange);
+  }
+
+  applyGridChangeToGrid(gridValues, selectedNumber, selectedOp, indexesToChange) {
+    for (var i = 0; i < indexesToChange.length; i++) {
+      const index = indexesToChange[i];
+      let newValue = gridValues[index];
+      switch(selectedOp) {
+        case OpType.ADD:
+          newValue = +gridValues[index] + +selectedNumber;
+          break;
+        case OpType.SUBTRACT:
+          newValue = +gridValues[index] - +selectedNumber;
+          break;
+        case OpType.MULTIPLY:
+          newValue = +gridValues[index] * +selectedNumber;
+          break;
+        case OpType.DIVIDE:
+          if ((gridValues[index] % +selectedNumber) === 0) {
+            newValue = +gridValues[index] / +selectedNumber;
+          }
+          break;
+        default:
+          console.log("No operation selected");
+      }
+      console.log("New value= " + newValue);
+      gridValues[index] = newValue;
+    }
+    const newMoves = this.state.moves + 1;
+    console.log("Number of moves now=" + newMoves);
+    this.setState({
+      gridValues: gridValues,
+      moves: newMoves
+    });
+  }
+
   render() {
     return (
       <div className="container">
         <h1>Ruboku</h1>
-        <p>Moves: 0</p>
+        <p>Moves: {this.state.moves}</p>
         <div className="undo-button">Undo Last Move</div>
-        <Grid/>
+        <Grid handleClick={(rowOrCol, number) => this.handleGridButtonClick(rowOrCol, number)} gridValues={this.state.gridValues}/>
         <Numbers handleClick={(i) => this.handleNumberClick(i)} getDivId={(i, numberOrOp) => this.getDivId(i, numberOrOp)}/>
         <Operations handleClick={(i) => this.handleOperationClick(i)} getDivId={(i, numberOrOp) => this.getDivId(i, numberOrOp)}/>
       </div>

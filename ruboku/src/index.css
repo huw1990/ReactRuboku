@@ -32,12 +32,13 @@ h1, p {
   margin-left: 20px;
 }
 
-.game-item {
+.game-grid div {
   background-color: #949596;
   color: #fff;
   border-radius: 5px;
   padding: 15px;
   margin: auto;
+  font-size: 80%;
 }
 
 .number-buttons {
