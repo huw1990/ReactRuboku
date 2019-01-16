@@ -2,66 +2,31 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-class Numbers extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedNumbers: Array(10).fill(false),
-      selectedNumber: -1,
-    }
-  }
+function Numbers(props) {
+  return (
+    <div className="number-buttons">
+      {renderNumber(1, props)}
+      {renderNumber(2, props)}
+      {renderNumber(3, props)}
+      {renderNumber(4, props)}
+      {renderNumber(5, props)}
+      {renderNumber(6, props)}
+      {renderNumber(7, props)}
+      {renderNumber(8, props)}
+      {renderNumber(9, props)}
+      {renderNumber(10, props)}
+    </div>
+  );
+}
 
-  handleClick(i) {
-    const value = i - 1;
-    const selectedNumbers = this.state.selectedNumbers.slice();
-    const selectedNum = this.state.selectedNumber;
-    if (selectedNum != -1) {
-      selectedNumbers[selectedNum - 1] = false;
-    }
-    selectedNumbers[value] = true;
-    this.setState({
-      selectedNumbers: selectedNumbers,
-      selectedNumber: i,
-    });
-  }
-
-  getDivId(i) {
-    const arrayValue = i - 1;
-    const isSelected = this.state.selectedNumbers[arrayValue];
-    console.log("i=" + arrayValue + " isSelected=" + isSelected);
-    if (isSelected) {
-      return "clicked";
-    } else {
-      return "clickable";
-    }
-  }
-
-  renderNumber(i) {
-    return (
-      <Number
-        value={i}
-        divid={this.getDivId(i)}
-        onClick={() => this.handleClick(i)}
-      />
-    );
-  }
-
-  render() {
-    return (
-      <div className="number-buttons">
-        {this.renderNumber(1)}
-        {this.renderNumber(2)}
-        {this.renderNumber(3)}
-        {this.renderNumber(4)}
-        {this.renderNumber(5)}
-        {this.renderNumber(6)}
-        {this.renderNumber(7)}
-        {this.renderNumber(8)}
-        {this.renderNumber(9)}
-        {this.renderNumber(10)}
-      </div>
-    );
-  }
+function renderNumber(i, props) {
+  return (
+    <Number
+      value={i}
+      divid={props.getDivId(i)}
+      onClick={() => {props.handleClick(i);}}
+    />
+  );
 }
 
 function Number(props) {
@@ -133,6 +98,42 @@ class Grid extends React.Component {
 }
 
 class Game extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedNumbers: Array(10).fill(false),
+      selectedNumber: -1,
+    }
+  }
+
+  handleClick(i) {
+    console.log("i=" + i);
+    const value = i - 1;
+    const selectedNumbers = this.state.selectedNumbers.slice();
+    const selectedNum = this.state.selectedNumber;
+    if (selectedNum !== -1) {
+      selectedNumbers[selectedNum - 1] = false;
+    }
+    selectedNumbers[value] = true;
+    console.log("Setting state");
+    this.setState({
+      selectedNumbers: selectedNumbers,
+      selectedNumber: i,
+    });
+  }
+
+  getDivId(i) {
+    console.log("getDivId");
+    const arrayValue = i - 1;
+    const isSelected = this.state.selectedNumbers[arrayValue];
+    console.log("i=" + arrayValue + " isSelected=" + isSelected);
+    if (isSelected) {
+      return "clicked";
+    } else {
+      return "clickable";
+    }
+  }
+
   render() {
     return (
       <div className="container">
@@ -140,7 +141,7 @@ class Game extends React.Component {
         <p>Moves: 0</p>
         <div className="undo-button">Undo Last Move</div>
         <Grid/>
-        <Numbers/>
+        <Numbers handleClick={(i) => this.handleClick(i)} getDivId={(i) => this.getDivId(i)}/>
         <Operations/>
       </div>
     );
