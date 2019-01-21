@@ -139,7 +139,8 @@ class Game extends React.Component {
       selectedNumber: -1,
       selectedOps: Array(4).fill(false),
       selectedOp: OpType.NONE,
-      moves: 0
+      moves: 0,
+      won: false
     }
   }
 
@@ -195,6 +196,14 @@ class Game extends React.Component {
       return;
     }
     const selectedOp = this.state.selectedOp;
+    if (selectedOp === OpType.NONE) {
+      console.log("No operation selected");
+      return;
+    }
+    if (this.state.won) {
+      console.log("Not making move, game already won");
+      return;
+    }
     const gridValues = this.state.gridValues.slice();
     let indexesToChange = (rowOrCol === RowOrCol.ROW) ? RowIndexes[number] : ColIndexes[number];
     this.applyGridChangeToGrid(gridValues, selectedNumber, selectedOp, indexesToChange);
@@ -231,13 +240,41 @@ class Game extends React.Component {
       gridValues: gridValues,
       moves: newMoves
     });
+    this.checkForWinner(gridValues);
+  }
+
+  checkForWinner(gridValues) {
+    let firstVal = gridValues[0];
+    for (var i = 1; i < gridValues.length; i++) {
+      let nextVal = gridValues[i];
+      if (firstVal !== nextVal) {
+        return;
+      }
+    }
+    //If we've got to this point without returning, we must have won the game
+    console.log("Game won!");
+    this.setState({
+      won: true
+    });
+  }
+
+  getGameStatus() {
+    if (this.state.won) {
+      return (
+        <p>WINNER! {this.state.moves} moves</p>
+      );
+    } else {
+      return (
+        <p>Moves: {this.state.moves}</p>
+      );
+    }
   }
 
   render() {
     return (
       <div className="container">
         <h1>Ruboku</h1>
-        <p>Moves: {this.state.moves}</p>
+        {this.getGameStatus()}
         <div className="undo-button">Undo Last Move</div>
         <Grid handleClick={(rowOrCol, number) => this.handleGridButtonClick(rowOrCol, number)} gridValues={this.state.gridValues}/>
         <Numbers handleClick={(i) => this.handleNumberClick(i)} getDivId={(i, numberOrOp) => this.getDivId(i, numberOrOp)}/>
