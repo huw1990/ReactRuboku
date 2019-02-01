@@ -134,7 +134,9 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      gridValues: [1, 1, 6, 5, 5, 30, 9, 9, 14],
+      history: [{
+        gridValues: [1, 1, 6, 5, 5, 30, 9, 9, 14],
+      }],
       selectedNumbers: Array(10).fill(false),
       selectedNumber: -1,
       selectedOps: Array(4).fill(false),
@@ -177,10 +179,8 @@ class Game extends React.Component {
   }
 
   getDivId(i, numberOrOp) {
-    console.log("getDivId, numberOrOp=" + numberOrOp);
     const arrayValue = i - 1;
     const isSelected = (numberOrOp === GridChangePart.NUMBER) ? this.state.selectedNumbers[arrayValue] : this.state.selectedOps[arrayValue];
-    console.log("i=" + arrayValue + " isSelected=" + isSelected);
     if (isSelected) {
       return "clicked";
     } else {
@@ -204,12 +204,13 @@ class Game extends React.Component {
       console.log("Not making move, game already won");
       return;
     }
-    const gridValues = this.state.gridValues.slice();
+    const gridValues = this.getGridValues();
     let indexesToChange = (rowOrCol === RowOrCol.ROW) ? RowIndexes[number] : ColIndexes[number];
     this.applyGridChangeToGrid(gridValues, selectedNumber, selectedOp, indexesToChange);
   }
 
   applyGridChangeToGrid(gridValues, selectedNumber, selectedOp, indexesToChange) {
+    console.log("applyGridChangeToGrid, gridValues=" + gridValues);
     for (var i = 0; i < indexesToChange.length; i++) {
       const index = indexesToChange[i];
       let newValue = gridValues[index];
@@ -236,8 +237,11 @@ class Game extends React.Component {
     }
     const newMoves = this.state.moves + 1;
     console.log("Number of moves now=" + newMoves);
+    const history = this.state.history.slice();
     this.setState({
-      gridValues: gridValues,
+      history: history.concat([{
+        gridValues: gridValues,
+      }]),
       moves: newMoves
     });
     this.checkForWinner(gridValues);
@@ -270,13 +274,32 @@ class Game extends React.Component {
     }
   }
 
+  getGridValues() {
+    const history = this.state.history.slice();
+    const current = history[history.length - 1];
+    return current.gridValues.slice();
+  }
+
+  undoLastMove() {
+    const moves = this.state.moves;
+    if (moves > 0) {
+      const historyMinusOne = this.state.history.slice(0, moves);
+      const movesMinusOne = moves -1;
+      this.setState({
+        won: false,
+        history: historyMinusOne,
+        moves: movesMinusOne
+      });
+    }
+  }
+
   render() {
     return (
       <div className="container">
         <h1>Ruboku</h1>
         {this.getGameStatus()}
-        <div className="undo-button">Undo Last Move</div>
-        <Grid handleClick={(rowOrCol, number) => this.handleGridButtonClick(rowOrCol, number)} gridValues={this.state.gridValues}/>
+        <div className="undo-button" onClick={() => {this.undoLastMove();}}>Undo Last Move</div>
+        <Grid handleClick={(rowOrCol, number) => this.handleGridButtonClick(rowOrCol, number)} gridValues={this.getGridValues()}/>
         <Numbers handleClick={(i) => this.handleNumberClick(i)} getDivId={(i, numberOrOp) => this.getDivId(i, numberOrOp)}/>
         <Operations handleClick={(i) => this.handleOperationClick(i)} getDivId={(i, numberOrOp) => this.getDivId(i, numberOrOp)}/>
       </div>

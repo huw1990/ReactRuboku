@@ -16,6 +16,7 @@ h1, p {
     margin-bottom: 10px;
     border: 2px solid #47bc93;
     padding: 7px;
+    cursor:pointer;
 }
 
 .container {
